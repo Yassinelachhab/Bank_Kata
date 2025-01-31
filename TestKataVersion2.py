@@ -1,4 +1,18 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
+
+class AccountService(ABC):
+    @abstractmethod
+    def deposit(self, amount: int):
+        pass
+
+    @abstractmethod
+    def withdraw(self, amount: int):
+        pass
+
+    @abstractmethod
+    def print_statement(self):
+        pass
 
 class Transaction:
     def __init__(self, date: str, amount: int):
@@ -9,20 +23,17 @@ class TransactionRepository:
     def __init__(self):
         self.transactions = []
 
-    def add_deposit(self, amount: int):
+    def add_transaction(self, amount: int):
         self.transactions.append(Transaction(self.current_date(), amount))
 
-    def add_withdrawal(self, amount: int):
-        self.transactions.append(Transaction(self.current_date(), -amount))
-
-    def all_transactions(self):
+    def get_all_transactions(self):
         return self.transactions
 
     def current_date(self):
         return datetime.now().strftime("%d-%m-%Y")
 
 class StatementPrinter:
-    def print(self, transactions):
+    def print_statement(self, transactions):
         print("DATE | AMOUNT | BALANCE")
         balance = 0
         statement_lines = []
@@ -32,34 +43,35 @@ class StatementPrinter:
         for line in reversed(statement_lines):
             print(line)
 
-class Account:
+class BankAccount(AccountService):
     def __init__(self, transaction_repository: TransactionRepository, statement_printer: StatementPrinter):
         self.transaction_repository = transaction_repository
         self.statement_printer = statement_printer
 
-    def deposit(self):
-        amount = int(input("Enter deposit amount: "))
-        self.transaction_repository.add_deposit(amount)
+    def deposit(self, amount: int):
+        self.transaction_repository.add_transaction(amount)
 
-    def withdraw(self):
-        amount = int(input("Enter withdrawal amount: "))
-        self.transaction_repository.add_withdrawal(amount)
+    def withdraw(self, amount: int):
+        self.transaction_repository.add_transaction(-amount)
 
     def print_statement(self):
-        self.statement_printer.print(self.transaction_repository.all_transactions())
+        self.statement_printer.print_statement(self.transaction_repository.get_all_transactions())
 
+# Exemple d'utilisation
 if __name__ == "__main__":
-    account = Account(TransactionRepository(), StatementPrinter())
-    
+    account = BankAccount(TransactionRepository(), StatementPrinter())
+
     while True:
-        action = input("Enter 'd' to deposit, 'w' to withdraw, 's' to show statement, or 'q' to quit: ").strip().lower()
+        action = input("Entrer 'd' pour déposer, 'w' pour retirer, 's' pour afficher le relevé ou 'q' pour quitter : ").strip().lower()
         if action == 'd':
-            account.deposit()
+            amount = int(input("Entrez le montant à déposer : "))
+            account.deposit(amount)
         elif action == 'w':
-            account.withdraw()
+            amount = int(input("Entrez le montant à retirer : "))
+            account.withdraw(amount)
         elif action == 's':
             account.print_statement()
         elif action == 'q':
             break
         else:
-            print("Invalid input. Please try again.")
+            print("Entrée invalide. Veuillez réessayer.")
